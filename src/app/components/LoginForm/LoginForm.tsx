@@ -12,7 +12,6 @@ const LoginForm = () => {
 	const {
 		register,
 		handleSubmit,
-		watch,
 		formState: { errors },
 	} = useForm<FormValues>();
 
@@ -25,21 +24,27 @@ const LoginForm = () => {
 			}
 
 			const json = await res.json();
-			console.log({ json });
+			// localStorage.setItem('token', json.token);
+			// localStorage.setItem('exp', json.exp);
+			const expirationDate = new Date(json.exp).toUTCString();
+			document.cookie = `token=${json.token};expires=${expirationDate};path=/`;
+			console.log(document.cookie);
+
+			console.log({ exp: json.exp, now: new Date(Date.now()).toISOString() });
 		},
-		onSuccess: () => console.log('Login Success!'),
 		onError: (err) => console.error('failed to login', err),
 	});
 
-	const onSubmit = (data: FormValues) => {
-		console.log(data);
-		login(data);
-	};
-
 	return (
-		<form onSubmit={handleSubmit((data) => onSubmit(data))} className="flex flex-col gap-1 text-blue-950">
-			<input {...register('email')} placeholder="Email" />
-			<input {...register('password')} type="password" placeholder="password" />
+		<form onSubmit={handleSubmit((data) => login(data))} className="flex flex-col gap-1 text-blue-950">
+			<input {...register('email', { required: 'An Email is required' })} placeholder="Email" />
+			{errors.email && <p className="text-red-300">{errors.email.message}</p>}
+			<input
+				{...register('password', { required: 'A password is required' })}
+				type="password"
+				placeholder="password"
+			/>
+			{errors.password && <p className="text-red-300">{errors.password.message}</p>}
 			<input type="submit" />
 		</form>
 	);
