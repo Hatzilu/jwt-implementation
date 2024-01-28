@@ -1,20 +1,21 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 
-// This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
-	console.log({ cookies: request.cookies.getAll() });
-	const token = request.cookies.get('token');
-	if (!token) {
-		// console.log('no token');
-		throw new Error('no token');
-	}
+	const accessToken = request.headers.get('authorization')?.replace('Bearer ', '');
+	console.log({ accessToken });
 
-	// console.log({ request, token: localStorage.getItem('token') });
-	// return NextResponse.redirect(new URL('/home', request.url));
+	if (!accessToken || accessToken === 'undefined') {
+		const url = new URL('/login', request.url);
+
+		return NextResponse.rewrite(url, {
+			status: 401,
+		});
+	}
+	return NextResponse.next();
 }
 
 // See "Matching Paths" below to learn more
 export const config = {
-	matcher: '/user/:path*',
+	matcher: '/api/userdata/:path*',
 };
