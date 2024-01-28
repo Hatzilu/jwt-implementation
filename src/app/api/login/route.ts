@@ -1,14 +1,6 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 
-type ResponseData = {
-	token: string;
-	exp: Date;
-};
-
-const getExpirationDate = (minutes: number) => new Date(Date.now() + minutes * 60000); // 1 minute = 60,000 milliseconds
-// const getExpirationDate = (minutes: number) => new Date(Date.now() + 5000); // 1 minute = 60,000 milliseconds
-
 export async function POST(req: Request) {
 	try {
 		const data = await req.json();
@@ -16,12 +8,18 @@ export async function POST(req: Request) {
 		if (!process.env.JWT_KEY) {
 			throw new Error('JWT key doesnt exist');
 		}
-		const token = jwt.sign(data, process.env.JWT_KEY);
-		const expirationDate = getExpirationDate(5);
+		if (!data?.email || !data?.password) {
+			throw new Error('Invalid credentials');
+		}
+		// This is the token the user uses to authenticate
+		const accessToken = jwt.sign(data.email, process.env.JWT_KEY);
+
+		// This is our refresh token which will be used to refresh/rotate the access token
+		const refreshToken = jwt.sign('access-token', process.env.JWT_KEY);
 
 		return NextResponse.json({
-			token,
-			exp: expirationDate,
+			accessToken,
+			refreshToken,
 		});
 	} catch (e) {
 		console.log('err while parsing post', e);

@@ -2,11 +2,15 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 type FormValues = {
 	readonly email: string;
 	readonly password: string;
 };
+
+const getExpirationDate = (minutes: number) => new Date(Date.now() + minutes * 60000); // 1 minute = 60,000 milliseconds
 
 const LoginForm = () => {
 	const {
@@ -14,6 +18,9 @@ const LoginForm = () => {
 		handleSubmit,
 		formState: { errors },
 	} = useForm<FormValues>();
+	const router = useRouter();
+	const params = useSearchParams();
+	const showAuthorizationMessage = params?.get('showAuthorizationMessage');
 
 	const { mutate: login } = useMutation({
 		mutationFn: async (data: FormValues) => {
@@ -24,13 +31,16 @@ const LoginForm = () => {
 			}
 
 			const json = await res.json();
-			// localStorage.setItem('token', json.token);
-			// localStorage.setItem('exp', json.exp);
-			const expirationDate = new Date(json.exp).toUTCString();
-			document.cookie = `token=${json.token};expires=${expirationDate};path=/`;
-			console.log(document.cookie);
+			const accessTokenExp = new Date(getExpirationDate(30));
+			const refreshTokenExp = new Date(getExpirationDate(5));
+			console.log(json.accessToken);
+			Cookies.set('accessToken', json.accessToken, { expires: accessTokenExp, path: '/' });
+			Cookies.set(' refreshToken', json.refreshToken, { expires: refreshTokenExp, path: '/' });
+			// document.cookie = `accesstoken=${};expires=${accessTokenExp};path=/`;
+			// document.cookie = `refreshtoken=${json.refreshToken};expires=${};path=/`;
+			console.log('moving to user page');
 
-			console.log({ exp: json.exp, now: new Date(Date.now()).toISOString() });
+			router.push('/user/5');
 		},
 		onError: (err) => console.error('failed to login', err),
 	});
@@ -46,6 +56,9 @@ const LoginForm = () => {
 			/>
 			{errors.password && <p className="text-red-300">{errors.password.message}</p>}
 			<input type="submit" />
+			{showAuthorizationMessage && (
+				<p className="text-red-300">Session expired, please log-in again.</p>
+			)}
 		</form>
 	);
 };

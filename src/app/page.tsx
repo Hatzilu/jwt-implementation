@@ -1,6 +1,4 @@
 import Image from 'next/image';
-import LoginForm from './components/LoginForm/LoginForm';
-import { ProviderWrapper } from './components/ProviderWrapper/ProviderWrapper';
 
 export default function Home() {
 	return (
@@ -17,7 +15,7 @@ export default function Home() {
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						By{' '}
+						By export
 						<Image
 							src="/vercel.svg"
 							alt="Vercel Logo"
@@ -29,9 +27,6 @@ export default function Home() {
 					</a>
 				</div>
 			</div>
-			<ProviderWrapper>
-				<LoginForm />
-			</ProviderWrapper>
 
 			<div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
 				<a
