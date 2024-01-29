@@ -1,14 +1,16 @@
 'use client';
-import React from 'react';
+import React, { useEffect } from 'react';
 import Cookies from 'js-cookie';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import useUserActivity from '@/app/hooks/useUserActivity';
+import { updateTokenCookie } from '@/lib/utils';
 
 const User = () => {
 	const router = useRouter();
 	const { isUserActive, secondsSinceLastActive } = useUserActivity();
 
+	const refreshToken = Cookies.get('refreshToken');
 	const deleteSession = () => {
 		Cookies.remove('accessToken');
 		Cookies.remove('refreshToken');
@@ -35,6 +37,37 @@ const User = () => {
 			return json;
 		},
 	});
+
+	const shouldRotateAccessToken =
+		!Cookies.get('accessToken') && isUserActive && !!Cookies.get('refreshToken');
+	const auth = useQuery({
+		queryKey: ['getToken'],
+		enabled: shouldRotateAccessToken,
+		queryFn: async () => {
+			const res = await fetch('/api/getToken', {
+				method: 'POST',
+				body: JSON.stringify(Cookies.get('refreshToken')),
+			});
+			if (!res.ok) {
+				console.log({ res });
+				return;
+			}
+			const json = await res.json();
+			updateTokenCookie('accessToken', json.accessToken, 5);
+			updateTokenCookie('refreshToken', json.refreshToken, 30);
+		},
+	});
+	console.log({
+		accessToken: Cookies.get('accessToken'),
+		refreshToken: Cookies.get('refreshToken'),
+		isUserActive,
+	});
+
+	useEffect(() => {
+		if (isUserActive && refreshToken) return;
+
+		router.push('/login?showAuthorizationMessage=true');
+	}, [isUserActive, refreshToken]);
 
 	return (
 		<div className="flex flex-col gap-1">

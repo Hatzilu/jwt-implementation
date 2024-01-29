@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
+import jwt from 'jsonwebtoken';
 
 export function middleware(request: NextRequest) {
 	const accessToken = request.headers.get('authorization')?.replace('Bearer ', '');
-	console.log({ accessToken });
+	const cookies = request.cookies.getAll();
+	console.log({ accessToken, cookies });
 
 	if (!accessToken || accessToken === 'undefined') {
 		const url = new URL('/login', request.url);

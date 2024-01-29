@@ -4,13 +4,12 @@ import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { updateTokenCookie } from '@/lib/utils';
 
 type FormValues = {
 	readonly email: string;
 	readonly password: string;
 };
-
-const getExpirationDate = (minutes: number) => new Date(Date.now() + minutes * 60000); // 1 minute = 60,000 milliseconds
 
 const LoginForm = () => {
 	const {
@@ -31,13 +30,14 @@ const LoginForm = () => {
 			}
 
 			const json = await res.json();
-			const accessTokenExp = new Date(getExpirationDate(30));
-			const refreshTokenExp = new Date(getExpirationDate(5));
-			console.log(json.accessToken);
-			Cookies.set('accessToken', json.accessToken, { expires: accessTokenExp, path: '/' });
-			Cookies.set(' refreshToken', json.refreshToken, { expires: refreshTokenExp, path: '/' });
-			// document.cookie = `accesstoken=${};expires=${accessTokenExp};path=/`;
-			// document.cookie = `refreshtoken=${json.refreshToken};expires=${};path=/`;
+
+			updateTokenCookie('accessToken', json.accessToken, 1);
+			updateTokenCookie('refreshToken', json.refreshToken, 3);
+			console.log('cookies status:', {
+				access: Cookies.get('accessToken'),
+				refresh: Cookies.get('refreshToken'),
+			});
+
 			console.log('moving to user page');
 
 			router.push('/user/5');

@@ -2,14 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 
 const useUserActivity = () => {
 	const [secondsSinceLastActive, setSecondsSinceLastActive] = useState(0);
-	const isUserActive = secondsSinceLastActive < 60;
+	const isUserActive = secondsSinceLastActive < 40;
 	const timer = useRef<NodeJS.Timeout | null>(null);
-	const addSecond = () =>
-		setSecondsSinceLastActive((s) => {
-			console.log({ prev: s, next: s + 1 });
 
-			return s + 1;
-		});
+	const addSecond = () => setSecondsSinceLastActive((s) => s + 1);
 
 	const reset = () => {
 		setSecondsSinceLastActive(0);
@@ -18,7 +14,9 @@ const useUserActivity = () => {
 		}
 		timer.current = setTimeout(addSecond, 1000);
 	};
+
 	console.log(secondsSinceLastActive);
+
 	useEffect(() => {
 		timer.current = setTimeout(addSecond, 1000);
 
@@ -52,6 +50,7 @@ const useUserActivity = () => {
 	return {
 		isUserActive,
 		secondsSinceLastActive,
+		timer: timer.current,
 	};
 };
 

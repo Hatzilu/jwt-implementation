@@ -9,7 +9,8 @@ export async function POST(req: Request) {
 			throw new Error('JWT key doesnt exist');
 		}
 		if (!data?.email || !data?.password) {
-			throw new Error('Invalid credentials');
+			return NextResponse.error();
+			// throw new Error('Invalid credentials');
 		}
 		// This is the token the user uses to authenticate
 		const accessToken = jwt.sign(data.email, process.env.JWT_KEY);
